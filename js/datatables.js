@@ -590,33 +590,3 @@ function sdkcall(svc, method, params, alert_on_errors, backoff) {
 }
 
 // Service-specific mappings are now defined in services/
-
-/*
-* if (Object.keys(shouldFilter).length) return data;
-    if (typeof data[Object.keys(data)[0]][0] === 'string') {
-        for (let i = 0; i < data[Object.keys(data)[0]].length; i++) {
-            if (!isResourceEqualToArn(i, data[Object.keys(data)[0]])) {
-                data[Object.keys(data)[0]].splice(i, 1)
-            }
-        }
-    } else {
-        const new_data = []
-        for (let q = 0; q < data[Object.keys(data)[0]].length; q++) {
-            for (let k in data[Object.keys(data)[0]][q]) {
-                if (isKeyNameValidToFilter(k) && isResourceEqualToArn(k, data[Object.keys(data)[0]][q])) {
-                    new_data.push(data[Object.keys(data)[0]][q])
-                    break
-                }
-                if (k === 'properties') {
-                    for (let z in data[Object.keys(data)[0]][q]['properties']) {
-                        if (isKeyNameValidToFilter(z) && isResourceEqualToArn(z, data[Object.keys(data)[0]][q]['properties'])) {
-                            new_data.push(data[Object.keys(data)[0]][q])
-                            break
-                        }
-                    }
-                }
-            }
-        }
-        data[Object.keys(data)[0]] = new_data
-    }
-    return data*/
