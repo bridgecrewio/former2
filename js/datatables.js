@@ -239,18 +239,18 @@ function isKeyNameValidToFilter(key) {
 
 function isResourceEqualToArn(key, data) {
     if (typeof(data[key]) === 'string') {
-        return resourcesArn.some(f => data[key].toLowerCase().indexOf(f) > -1)
+        return physicalIdsFilter.some(f => data[key].toLowerCase().indexOf(f) > -1)
     } else {
         return true
     }
 }
 
 function isValidMethod(svc, method) {
-    if (svc === 'DynamoDB' && method.startsWith('describe')) return false
-    return true
+    return !(svc === 'DynamoDB' && method.startsWith('describe'));
+
 }
 
-function filterDataByArnIds(shouldFilter, data, svc, method) {
+function filterDataByArnIds(data, svc, method) {
     switch ( svc ) {
         case 'EKS':
             data = filterListOfStrings(data);
@@ -365,9 +365,9 @@ function sdkcall(svc, method, params, alert_on_errors, backoff) {
                 }
                 console.log(`CloudFormationer log - sdkcall with svc: ${svc}, method: ${method}, params: ${params}`)
                 console.log('CloudFormationer log - sdkcall data before filtering: ', data)
-                if (resourcesArn.length > 0 && Object.keys(params).length === 0) {
+                if (physicalIdsFilter.length > 0 && Object.keys(params).length === 0) {
                     console.log('CloudFormationer log - starting to filter the data')
-                    data = filterDataByArnIds(params, data, svc, method)
+                    data = filterDataByArnIds(data, svc, method)
                 }
                 console.log('CloudFormationer log - sdkcall data after filtering: ', data)
 
