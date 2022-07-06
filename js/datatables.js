@@ -208,10 +208,10 @@ function lambdaRuntimeFormatter(data) {
     return data;
 }
 
-function filterListOfStrings(data) {
+function filterListOfStrings(data, physicalIdsToFilterBy) {
     const filteredData = []
     for (let i = 0; i < data[Object.keys(data)[0]].length; i++) {
-        if (isResourceEqualToArn(i, data[Object.keys(data)[0]])) {
+        if (isResourceEqualToArn(i, data[Object.keys(data)[0]], physicalIdsToFilterBy)) {
             filteredData.push(data[Object.keys(data)[0]][i])
         }
     }
@@ -219,11 +219,11 @@ function filterListOfStrings(data) {
     return data
 }
 
-function filterListOfFlattenObjects(data) {
+function filterListOfFlattenObjects(data, physicalIdsToFilterBy) {
     const new_data = []
     for (let q = 0; q < data[Object.keys(data)[0]].length; q++) {
         for (let k in data[Object.keys(data)[0]][q]) {
-            if (isKeyNameValidToFilter(k) && isResourceEqualToArn(k, data[Object.keys(data)[0]][q])) {
+            if (isKeyNameValidToFilter(k) && isResourceEqualToArn(k, data[Object.keys(data)[0]][q], physicalIdsToFilterBy)) {
                 new_data.push(data[Object.keys(data)[0]][q])
                 break
             }
@@ -237,9 +237,9 @@ function isKeyNameValidToFilter(key) {
     return keysToFilterBy.some(substring => key.toLowerCase().includes(substring));
 }
 
-function isResourceEqualToArn(key, data) {
+function isResourceEqualToArn(key, data, physicalIdsToFilterBy) {
     if (typeof(data[key]) === 'string') {
-        return physicalIdsFilter.some(f => data[key].toLowerCase().indexOf(f) > -1)
+        return physicalIdsToFilterBy.some(f => data[key].toLowerCase().indexOf(f) > -1)
     } else {
         return true
     }
@@ -250,22 +250,25 @@ function isValidMethod(svc, method) {
 
 }
 
-function filterDataByArnIds(data, svc, method) {
-    switch ( svc ) {
-        case 'EKS':
-            data = filterListOfStrings(data);
-            break;
-        case 'S3':
-            data = filterListOfFlattenObjects(data);
-            break;
-        case 'DynamoDB':
-            if (!isValidMethod(svc, method)) break;
-            data = filterListOfStrings(data);
-            break;
-        default:
-            break
-    }
-    return data
+function filterDataByArnIds(params, data, svc, method, physicalIdsToFilterBy) {
+    if (physicalIdsToFilterBy.length > 0 && Object.keys(params).length === 0) {
+        console.log('CloudFormationer log - starting to filter the data')
+        switch (svc) {
+            case 'EKS':
+                data = filterListOfStrings(data, physicalIdsToFilterBy);
+                break;
+            case 'S3':
+                data = filterListOfFlattenObjects(data, physicalIdsToFilterBy);
+                break;
+            case 'DynamoDB':
+                if (!isValidMethod(svc, method)) break;
+                data = filterListOfStrings(data, physicalIdsToFilterBy);
+                break;
+            default:
+                break
+        }
+        return data
+    } else return data
 }
 
 
@@ -365,10 +368,8 @@ function sdkcall(svc, method, params, alert_on_errors, backoff) {
                 }
                 console.log(`CloudFormationer log - sdkcall with svc: ${svc}, method: ${method}, params: ${params}`)
                 console.log('CloudFormationer log - sdkcall data before filtering: ', data)
-                if (physicalIdsFilter.length > 0 && Object.keys(params).length === 0) {
-                    console.log('CloudFormationer log - starting to filter the data')
-                    data = filterDataByArnIds(data, svc, method)
-                }
+                const physicalIdsToFilterBy = physicalIdsFilter
+                data = filterDataByArnIds(params, data, svc, method, physicalIdsToFilterBy)
                 console.log('CloudFormationer log - sdkcall data after filtering: ', data)
 
                 // https://github.com/iann0036/aws-pagination-rules
@@ -588,5 +589,6 @@ function sdkcall(svc, method, params, alert_on_errors, backoff) {
         });
     });
 }
+module.exports = { filterDataByArnIds };
 
 // Service-specific mappings are now defined in services/

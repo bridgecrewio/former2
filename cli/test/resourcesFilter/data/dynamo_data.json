@@ -1,0 +1,24 @@
+{
+  "dynamoData": {
+    "TableNames": [
+      "active_guardrailsachia",
+      "active_guardrailscshayner",
+      "active_guardrailscshayner2",
+      "active_guardrailsmock",
+      "active_guardrailsnaor",
+      "active_guardrailsnaortest",
+      "active_guardrailspeleg",
+      "active_guardrailspeleg8",
+      "active_guardrailsravni",
+      "active_guardrailsrotem"
+    ],
+    "LastEvaluatedTableName": "customers_saml_rbacravni"
+  },
+  "dynamoResult": {
+    "TableNames": [
+      "active_guardrailscshayner",
+      "active_guardrailscshayner2"
+    ],
+    "LastEvaluatedTableName": "customers_saml_rbacravni"
+  }
+}

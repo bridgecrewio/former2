@@ -11,18 +11,20 @@
   "main": "main.js",
   "scripts": {
     "prepare": "cp -f ../js/deepmerge.js . && cp -f ../js/mappings.js . && cp -f ../js/datatables.js . && cp -r ../js/services .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "../node_modules/mocha/bin/mocha.js --timeout 120000 'test/**/*.js'"
   },
   "author": "Ian Mckay",
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.773.0",
+    "chai": "^4.3.6",
     "cli-progress": "^3.5.0",
     "colors": "^1.4.0",
     "commander": "^4.1.0",
     "deepmerge": "^4.2.2",
     "former2": "^0.2.63",
     "logplease": "^1.2.15",
+    "mocha": "^10.0.0",
     "proxy-agent": "^3.1.1"
   },
   "bin": {
