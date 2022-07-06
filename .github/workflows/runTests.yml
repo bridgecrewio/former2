@@ -23,6 +23,7 @@ jobs:
           node-version: "14"
       - name: Run UnitTests
         run: |
+          cd cli
           yarn ci
           yarn run build --if-present
           yarn test
