@@ -11,7 +11,7 @@
   "main": "main.js",
   "scripts": {
     "prepare": "cp -f ../js/deepmerge.js . && cp -f ../js/mappings.js . && cp -f ../js/datatables.js . && cp -r ../js/services .",
-    "test": "../node_modules/mocha/bin/mocha.js --timeout 120000 'test/**/*.js'"
+    "test": "./node_modules/mocha/bin/mocha.js --timeout 120000 'test/**/*.js'"
   },
   "author": "Ian Mckay",
   "license": "MIT",
