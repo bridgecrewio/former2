@@ -1,0 +1,32 @@
+name: PR Tests
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+    types: [opened, reopened, synchronize]
+
+jobs:
+  workspace-mocha:
+    name: ESLint on Workspaces
+    runs-on: [self-hosted, Linux, X64]
+    container:
+      image: node:14
+      options: --user root
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@master
+      - name: Use nodejs 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - name: Install NPM dependencies
+        run: |
+        env:
+          NPN_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Run UnitTests
+        run: |
+          yarn ci
+          yarn run build --if-present
+          yarn test
