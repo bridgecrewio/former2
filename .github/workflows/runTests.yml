@@ -9,7 +9,7 @@ on:
 
 jobs:
   workspace-mocha:
-    name: ESLint on Workspaces
+    name: PR Tests
     runs-on: [self-hosted, Linux, X64]
     container:
       image: node:14
@@ -21,10 +21,6 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: "14"
-      - name: Install NPM dependencies
-        run: |
-        env:
-          NPN_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Run UnitTests
         run: |
           yarn ci
