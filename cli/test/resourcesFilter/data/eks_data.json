@@ -1,0 +1,16 @@
+{
+  "eksData": {
+    "clusters": [
+      "TEST-Chanoch",
+      "TEST-Chanoch-2",
+      "cshayner"
+    ],
+    "nextToken": null
+  },
+  "eksResults": {
+    "clusters": [
+      "cshayner"
+    ],
+    "nextToken": null
+  }
+}

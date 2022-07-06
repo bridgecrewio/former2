@@ -14,6 +14,7 @@ const _colors = require('colors');
 const pjson = require('./package.json');
 const { openStdin } = require("process");
 const CLI = true;
+const physicalIdsFilter = []
 
 logplease.setLogLevel('NONE');
 const awslog = logplease.create('AWS');
@@ -177,6 +178,15 @@ async function main(opts) {
         sections = sections.filter(val => val); // reindex
     }
 
+    if (opts.physicalIdsFilter) {
+        const rArn = opts.physicalIdsFilter.split(",").map(x => x.toLowerCase())
+        for (let i = 0; i < rArn.length; i++) {
+            physicalIdsFilter.push(rArn[i]);
+        }
+    }
+    console.log('CloudFormationer log - physicalIdsFilter: ', physicalIdsFilter)
+
+
     if (opts.cfnDeletionPolicy && opts.cfnDeletionPolicy != "Delete" && opts.cfnDeletionPolicy != "Retain") {
         throw new Error('You must specify --cfn-deletion-policy value in [Delete, Retain]');
     }
@@ -197,7 +207,6 @@ async function main(opts) {
     });
 
     b1.start(sections.length, 0);
-
     await Promise.all(
         sections
         .map(section => {
@@ -302,6 +311,7 @@ cliargs
     .option('--profile <profilename>', 'uses the profile specified from the shared credentials file')
     .option('--proxy <protocol://host:port>', 'use proxy')
     .option('--debug', 'log debugging messages')
+    .option('--physical-ids-filter <value>', 'list of physical ids to filter by')
     .action(async (opts) => {
         // The followings are here to silence Node runtime complaining about event emitter listeners
         // due to the number of TLS requests that suddenly go out to AWS APIs. This is harmless here
