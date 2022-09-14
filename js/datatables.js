@@ -366,11 +366,11 @@ function sdkcall(svc, method, params, alert_on_errors, backoff) {
                     reject(data);
                     return;
                 }
-                console.log(`CloudFormationer log - sdkcall with svc: ${svc}, method: ${method}, params: ${params}`)
-                console.log('CloudFormationer log - sdkcall data before filtering: ', data)
-                const physicalIdsToFilterBy = physicalIdsFilter
-                data = filterDataByArnIds(params, data, svc, method, physicalIdsToFilterBy)
-                console.log('CloudFormationer log - sdkcall data after filtering: ', data)
+//                 console.log(`CloudFormationer log - sdkcall with svc: ${svc}, method: ${method}, params: ${params}`)
+//                 console.log('CloudFormationer log - sdkcall data before filtering: ', data)
+//                 const physicalIdsToFilterBy = physicalIdsFilter
+//                 data = filterDataByArnIds(params, data, svc, method, physicalIdsToFilterBy)
+//                 console.log('CloudFormationer log - sdkcall data after filtering: ', data)
 
                 // https://github.com/iann0036/aws-pagination-rules
                 if (svc == "CloudWatchLogs" && method == "describeLogStreams") {
