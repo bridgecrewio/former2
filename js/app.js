@@ -967,9 +967,11 @@ $(document).ready(function(){
         "ap-northeast-2": "Asia Pacific (Seoul)",
         "ap-southeast-1": "Asia Pacific (Singapore)",
         "ap-southeast-2": "Asia Pacific (Sydney)",
+        "ap-southeast-3": "Asia Pacific (Jakarta)",
         "ap-northeast-1": "Asia Pacific (Tokyo)",
         "ca-central-1": "Canada (Central)",
         "eu-central-1": "EU (Frankfurt)",
+        "eu-central-2": "EU (Zurich)",
         "eu-west-1": "EU (Ireland)",
         "eu-west-2": "EU (London)",
         "eu-west-3": "EU (Paris)",
@@ -1683,7 +1685,7 @@ async function getResourceTags(arn) {
     var type = arn.split(":")[5].split("/")[0];
 
     if (!resource_tag_cache[ service/*+ "." + type*/ ]) {
-        resource_tag_cache[service] = [];
+        resource_tag_cache[service] = "PENDING";
         
         await sdkcall("ResourceGroupsTaggingAPI", "getResources", {
             ResourceTypeFilters: [ service/* + "." + type*/ ]
@@ -1693,6 +1695,10 @@ async function getResourceTags(arn) {
         setTimeout((k) => {
             delete resource_tag_cache[k];
         }, 20000, service/* + "." + type*/); // 20s cache
+    }
+
+    while (resource_tag_cache[service] == "PENDING") {
+        await new Promise(r => setTimeout(r, 2000));
     }
 
     for (var res of resource_tag_cache[ service/* + "." + type*/ ]) {
