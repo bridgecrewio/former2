@@ -1168,23 +1168,28 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
         reqParams.tf['instance_class'] = obj.data.DBInstanceClass;
         reqParams.cfn['Engine'] = obj.data.Engine;
         reqParams.tf['engine'] = obj.data.Engine;
-        if (!obj.data.Engine.startsWith("aurora")) {
-            reqParams.cfn['MasterUsername'] = obj.data.MasterUsername;
-            reqParams.tf['username'] = obj.data.MasterUsername;
-            reqParams.cfn['MasterUserPassword'] = 'REPLACEME';
-            reqParams.tf['password'] = 'REPLACEME';
-        }
-        reqParams.cfn['DBName'] = obj.data.DBName;
-        reqParams.tf['name'] = obj.data.DBName;
-        reqParams.cfn['PreferredBackupWindow'] = obj.data.PreferredBackupWindow;
-        if (obj.data.DBClusterIdentifier && obj.data.DBClusterIdentifier != "") {
-            reqParams.tf['preferred_backup_window'] = obj.data.PreferredBackupWindow;
+        if (obj.data.ReadReplicaSourceDBInstanceIdentifier) {
+            reqParams.cfn['SourceDBInstanceIdentifier'] = obj.data.ReadReplicaSourceDBInstanceIdentifier;
+            reqParams.tf['replicate_source_db'] = obj.data.ReadReplicaSourceDBInstanceIdentifier;
         } else {
-            reqParams.tf['backup_window'] = obj.data.PreferredBackupWindow;
-        }
-        if (!obj.data.Engine.startsWith("aurora")) {
-            reqParams.cfn['BackupRetentionPeriod'] = obj.data.BackupRetentionPeriod;
-            reqParams.tf['backup_retention_period'] = obj.data.BackupRetentionPeriod;
+            if (!obj.data.Engine.startsWith("aurora")) {
+                reqParams.cfn['MasterUsername'] = obj.data.MasterUsername;
+                reqParams.tf['username'] = obj.data.MasterUsername;
+                reqParams.cfn['MasterUserPassword'] = 'REPLACEME';
+                reqParams.tf['password'] = 'REPLACEME';
+            }
+            reqParams.cfn['DBName'] = obj.data.DBName;
+            reqParams.tf['name'] = obj.data.DBName;
+            reqParams.cfn['PreferredBackupWindow'] = obj.data.PreferredBackupWindow;
+            if (obj.data.DBClusterIdentifier && obj.data.DBClusterIdentifier != "") {
+                reqParams.tf['preferred_backup_window'] = obj.data.PreferredBackupWindow;
+            } else {
+                reqParams.tf['backup_window'] = obj.data.PreferredBackupWindow;
+            }
+            if (!obj.data.Engine.startsWith("aurora")) {
+                reqParams.cfn['BackupRetentionPeriod'] = obj.data.BackupRetentionPeriod;
+                reqParams.tf['backup_retention_period'] = obj.data.BackupRetentionPeriod;
+            }
         }
         reqParams.cfn['AvailabilityZone'] = obj.data.AvailabilityZone;
         reqParams.tf['availability_zone'] = obj.data.AvailabilityZone;
@@ -1385,10 +1390,10 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
         });
         reqParams.cfn['Tags'] = stripAWSTags(obj.data.Tags);
         if (obj.data.Tags) {
-            reqParams.tf['tags'] = new Set();
+            reqParams.tf['tags'] = new Map();
             obj.data.Tags.forEach(tag => {
                 if (!tag.Key.startsWith("aws:")) {
-                    reqParams.tf['tags'][tag['Key']] = tag['Value'];
+                    reqParams.tf['tags'].set(tag['Key'], tag['Value']);
                 }
             });
         }
@@ -1433,6 +1438,7 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
             'options': reqParams
         });
     } else if (obj.type == "rds.parametergroup") {
+        reqParams.cfn['DBClusterParameterGroupName'] = obj.data.DBParameterGroupName;
         reqParams.cfn['Description'] = obj.data.Description;
         reqParams.tf['description'] = obj.data.Description;
         reqParams.cfn['Family'] = obj.data.DBParameterGroupFamily;
@@ -1460,7 +1466,10 @@ service_mapping_functions.push(function(reqParams, obj, tracked_resources){
             'service': 'rds',
             'type': 'AWS::RDS::DBParameterGroup',
             'terraformType': 'aws_db_parameter_group',
-            'options': reqParams
+            'options': reqParams,
+            'returnValues': {
+                'Ref': obj.data.DBParameterGroupName
+            }
         });
     } else if (obj.type == "rds.optiongroup") {
         reqParams.cfn['EngineName'] = obj.data.EngineName;

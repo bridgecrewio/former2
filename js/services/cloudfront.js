@@ -168,6 +168,90 @@ sections.push({
                 ]
             ]
         },
+        'Origin Access Controls': {
+            'columns': [
+                [
+                    {
+                        field: 'state',
+                        checkbox: true,
+                        rowspan: 2,
+                        align: 'center',
+                        valign: 'middle'
+                    },
+                    {
+                        title: 'ID',
+                        field: 'id',
+                        rowspan: 2,
+                        align: 'center',
+                        valign: 'middle',
+                        sortable: true,
+                        formatter: primaryFieldFormatter,
+                        footerFormatter: textFormatter
+                    },
+                    {
+                        title: 'Properties',
+                        colspan: 4,
+                        align: 'center'
+                    }
+                ],
+                [
+                    {
+                        field: 'name',
+                        title: 'Name',
+                        sortable: true,
+                        editable: true,
+                        footerFormatter: textFormatter,
+                        align: 'center'
+                    },
+                    {
+                        field: 'description',
+                        title: 'Description',
+                        sortable: true,
+                        editable: true,
+                        footerFormatter: textFormatter,
+                        align: 'center'
+                    }
+                ]
+            ]
+        },
+        'Continuous Deployment Policies': {
+            'columns': [
+                [
+                    {
+                        field: 'state',
+                        checkbox: true,
+                        rowspan: 2,
+                        align: 'center',
+                        valign: 'middle'
+                    },
+                    {
+                        title: 'ID',
+                        field: 'id',
+                        rowspan: 2,
+                        align: 'center',
+                        valign: 'middle',
+                        sortable: true,
+                        formatter: primaryFieldFormatter,
+                        footerFormatter: textFormatter
+                    },
+                    {
+                        title: 'Properties',
+                        colspan: 4,
+                        align: 'center'
+                    }
+                ],
+                [
+                    {
+                        field: 'type',
+                        title: 'Type',
+                        sortable: true,
+                        editable: true,
+                        footerFormatter: textFormatter,
+                        align: 'center'
+                    }
+                ]
+            ]
+        },
         'Cache Policies': {
             'columns': [
                 [
@@ -481,6 +565,8 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
     blockUI('#section-networkingandcontentdelivery-cloudfront-distributions-datatable');
     blockUI('#section-networkingandcontentdelivery-cloudfront-streamingdistributions-datatable');
     blockUI('#section-networkingandcontentdelivery-cloudfront-originaccessidentities-datatable');
+    blockUI('#section-networkingandcontentdelivery-cloudfront-originaccesscontrols-datatable');
+    blockUI('#section-networkingandcontentdelivery-cloudfront-continuousdeploymentpolicies-datatable');
     blockUI('#section-networkingandcontentdelivery-cloudfront-cachepolicies-datatable');
     blockUI('#section-networkingandcontentdelivery-cloudfront-originrequestpolicies-datatable');
     blockUI('#section-networkingandcontentdelivery-cloudfront-realtimelogconfigs-datatable');
@@ -508,6 +594,26 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
 
         unblockUI('#section-networkingandcontentdelivery-cloudfront-originaccessidentities-datatable');
     });
+
+    await sdkcall("CloudFront", "listOriginAccessControls", {
+        // no params
+    }, false).then((data) => {
+        $('#section-networkingandcontentdelivery-cloudfront-originaccesscontrols-datatable').deferredBootstrapTable('removeAll');
+
+        data.OriginAccessControlList.Items.forEach(item => {
+            $('#section-networkingandcontentdelivery-cloudfront-originaccesscontrols-datatable').deferredBootstrapTable('append', [{
+                f2id: item.Id,
+                f2type: 'cloudfront.originaccesscontrol',
+                f2data: item,
+                f2region: region,
+                id: item.Id,
+                name: item.Name,
+                description: item.Description
+            }]);
+        });
+
+        unblockUI('#section-networkingandcontentdelivery-cloudfront-originaccesscontrols-datatable');
+    }).catch(err => { });
 
     await sdkcall("CloudFront", "listDistributions", {
         // no params
@@ -558,6 +664,29 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
         });
 
         unblockUI('#section-networkingandcontentdelivery-cloudfront-streamingdistributions-datatable');
+    });
+
+    await sdkcall("CloudFront", "listContinuousDeploymentPolicies", {
+        // no params
+    }, true).then(async (data) => {
+        $('#section-networkingandcontentdelivery-cloudfront-continuousdeploymentpolicies-datatable').deferredBootstrapTable('removeAll');
+
+        await Promise.all(data.ContinuousDeploymentPolicyList.Items.map(continuousDeploymentPolicy => {
+            return sdkcall("CloudFront", "getContinuousDeploymentPolicy", {
+                Id: continuousDeploymentPolicy.ContinuousDeploymentPolicy.Id
+            }, true).then((data) => {
+                $('#section-networkingandcontentdelivery-cloudfront-continuousdeploymentpolicies-datatable').deferredBootstrapTable('append', [{
+                    f2id: data.ContinuousDeploymentPolicy.Id,
+                    f2type: 'cloudfront.continuousdeploymentpolicy',
+                    f2data: data.ContinuousDeploymentPolicy,
+                    f2region: region,
+                    id: data.ContinuousDeploymentPolicy.Id,
+                    type: data.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig.TrafficConfig.Type
+                }]);
+            });
+        }));
+
+        unblockUI('#section-networkingandcontentdelivery-cloudfront-continuousdeploymentpolicies-datatable');
     });
 
     await sdkcall("CloudFront", "listCachePolicies", {
@@ -737,6 +866,7 @@ async function updateDatatableNetworkingAndContentDeliveryCloudFront() {
         }));
     });
 
+    unblockUI('#section-networkingandcontentdelivery-cloudfront-continuousdeploymentpolicies-datatable');
     unblockUI('#section-networkingandcontentdelivery-cloudfront-keygroups-datatable');
     unblockUI('#section-networkingandcontentdelivery-cloudfront-publickeys-datatable');
     unblockUI('#section-networkingandcontentdelivery-cloudfront-functions-datatable');
@@ -784,11 +914,11 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
             }
             if (origin.CustomHeaders) {
                 customHeaders = origin.CustomHeaders.Items;
-                tfCustomHeaders = [];
+                tfCustomHeaders = new Set();
                 origin.CustomHeaders.Items.forEach(customheader => {
-                    tfCustomHeaders.push({
-                        'name': customheader.Name,
-                        'value': customheader.Value
+                    tfCustomHeaders.add({
+                        'name': customheader.HeaderName,
+                        'value': customheader.HeaderValue
                     })
                 });
             }
@@ -798,7 +928,7 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
                 'CustomOriginConfig': customOriginConfig,
                 'DomainName': origin.DomainName,
                 'Id': origin.Id,
-                'OriginCustomHeaders': tfCustomHeaders,
+                'OriginCustomHeaders': customHeaders,
                 'OriginPath': origin.OriginPath,
                 'S3OriginConfig': origin.S3OriginConfig
             });
@@ -806,7 +936,7 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
                 'custom_origin_config': tfCustomOriginConfig,
                 'domain_name': origin.DomainName,
                 'origin_id': origin.Id,
-                'custom_header': customHeaders,
+                'custom_header': tfCustomHeaders,
                 'origin_path': origin.OriginPath,
                 's3_origin_config': tfS3OriginConfig
             });
@@ -822,6 +952,15 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
                 tfDefaultCacheLambdaFunctionAssociations.push({
                     'event_type': lambdaFunctionAssociation.EventType,
                     'lambda_arn': lambdaFunctionAssociation.LambdaFunctionARN
+                });
+            });
+        }
+        var defaultCacheFunctionAssociations = [];
+        if (obj.data.DistributionConfig.DefaultCacheBehavior.FunctionAssociations.Items && obj.data.DistributionConfig.DefaultCacheBehavior.FunctionAssociations.Items.length) {
+            obj.data.DistributionConfig.DefaultCacheBehavior.FunctionAssociations.Items.forEach(functionAssociation => {
+                defaultCacheFunctionAssociations.push({
+                    'EventType': functionAssociation.EventType,
+                    'FunctionARN': functionAssociation.FunctionARN
                 });
             });
         }
@@ -865,6 +1004,7 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
                 'OriginRequestPolicyId': obj.data.DistributionConfig.DefaultCacheBehavior.OriginRequestPolicyId,
                 'FieldLevelEncryptionId': (obj.data.DistributionConfig.DefaultCacheBehavior.FieldLevelEncryptionId == "" ? null : obj.data.DistributionConfig.DefaultCacheBehavior.FieldLevelEncryptionId),
                 'ForwardedValues': forwardedValues,
+                'FunctionAssociations': defaultCacheFunctionAssociations,
                 'LambdaFunctionAssociations': defaultCacheLambdaFunctionAssociations,
                 'MaxTTL': obj.data.DistributionConfig.DefaultCacheBehavior.MaxTTL,
                 'MinTTL': obj.data.DistributionConfig.DefaultCacheBehavior.MinTTL,
@@ -910,6 +1050,15 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
                         });
                     });
                 }
+                var cacheFunctionAssociations = [];
+                if (cacheBehaviour.FunctionAssociations.Items && cacheBehaviour.FunctionAssociations.Items.length) {
+                    cacheBehaviour.FunctionAssociations.Items.forEach(functionAssociation => {
+                        cacheFunctionAssociations.push({
+                            'EventType': functionAssociation.EventType,
+                            'FunctionARN': functionAssociation.FunctionARN
+                        });
+                    });
+                }
                 var cookiesWhitelistedNames = null;
                 if (cacheBehaviour.ForwardedValues && cacheBehaviour.ForwardedValues.Cookies && cacheBehaviour.ForwardedValues.Cookies.WhitelistedNames) {
                     cookiesWhitelistedNames = cacheBehaviour.ForwardedValues.Cookies.WhitelistedNames.Items;
@@ -949,6 +1098,7 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
                     'OriginRequestPolicyId': cacheBehaviour.OriginRequestPolicyId,
                     'FieldLevelEncryptionId': (cacheBehaviour.FieldLevelEncryptionId == "" ? null : cacheBehaviour.FieldLevelEncryptionId),
                     'ForwardedValues': forwardedValues,
+                    'FunctionAssociations': cacheFunctionAssociations,
                     'LambdaFunctionAssociations': cacheLambdaFunctionAssociations,
                     'MaxTTL': cacheBehaviour.MaxTTL,
                     'MinTTL': cacheBehaviour.MinTTL,
@@ -1369,6 +1519,45 @@ service_mapping_functions.push(async function(reqParams, obj, tracked_resources)
             'region': obj.region,
             'service': 'cloudfront',
             'type': 'AWS::CloudFront::ResponseHeadersPolicy',
+            'options': reqParams,
+            'returnValues': {
+                'Ref': obj.data.Id
+            }
+        });
+    } else if (obj.type == "cloudfront.originaccesscontrol") {
+        reqParams.cfn['OriginAccessControlConfig'] = {
+            'Name': obj.data.Name,
+            'Description': obj.data.Description,
+            'OriginAccessControlOriginType': obj.data.OriginAccessControlOriginType,
+            'SigningBehavior': obj.data.SigningBehavior,
+            'SigningProtocol': obj.data.SigningProtocol
+        };
+
+        tracked_resources.push({
+            'obj': obj,
+            'logicalId': getResourceName('cloudfront', obj.id, 'AWS::CloudFront::OriginAccessControl'),
+            'region': obj.region,
+            'service': 'cloudfront',
+            'type': 'AWS::CloudFront::OriginAccessControl',
+            'options': reqParams,
+            'returnValues': {
+                'Ref': obj.data.Id
+            }
+        });
+    } else if (obj.type == "cloudfront.continuousdeploymentpolicy") {
+        reqParams.cfn['ContinuousDeploymentPolicyConfig'] = {
+            'Enabled': obj.data.ContinuousDeploymentPolicyConfig.Enabled,
+            'StagingDistributionDnsNames': obj.data.ContinuousDeploymentPolicyConfig.StagingDistributionDnsNames.Items,
+            'TrafficConfig': obj.data.ContinuousDeploymentPolicyConfig.TrafficConfig,
+            'Type': obj.data.ContinuousDeploymentPolicyConfig.Type
+        };
+
+        tracked_resources.push({
+            'obj': obj,
+            'logicalId': getResourceName('cloudfront', obj.id, 'AWS::CloudFront::ContinuousDeploymentPolicy'),
+            'region': obj.region,
+            'service': 'cloudfront',
+            'type': 'AWS::CloudFront::ContinuousDeploymentPolicy',
             'options': reqParams,
             'returnValues': {
                 'Ref': obj.data.Id

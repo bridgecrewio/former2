@@ -41,7 +41,7 @@ async function getResourceTags(arn) {
     var type = arn.split(":")[5].split("/")[0];
 
     if (!resource_tag_cache[ service/*+ "." + type*/ ]) {
-        resource_tag_cache[service] = [];
+        resource_tag_cache[service] = "PENDING";
         
         await sdkcall("ResourceGroupsTaggingAPI", "getResources", {
             ResourceTypeFilters: [ service/* + "." + type*/ ]
@@ -51,6 +51,10 @@ async function getResourceTags(arn) {
         setTimeout((k) => {
             delete resource_tag_cache[k];
         }, 20000, service/* + "." + type*/); // 20s cache
+    }
+
+    while (resource_tag_cache[service] == "PENDING") {
+        await new Promise(r => setTimeout(r, 2000));
     }
 
     for (var res of resource_tag_cache[ service/* + "." + type*/ ]) {
@@ -93,6 +97,7 @@ var resource_tag_cache = {};
 const iaclangselect = "typescript";
 
 function $(selector) { return new $obj(selector) }
+const isAllIncludes = (arr, target) => arr.every(el => target.includes(el));
 $obj = function (selector) { };
 $obj.prototype.bootstrapTable = function (action, data) {
     if (action == "append") {
@@ -254,6 +259,16 @@ async function main(opts) {
                             });
                             break;
                         }
+                    }
+                } else if (opts.searchFilter.includes("&")) {
+                    const searchWords = opts.searchFilter.split("&")
+                    if (isAllIncludes(searchWords, jsonres)) {
+                        output_objects.push({
+                            'id': cli_resources[i].f2id,
+                            'type': cli_resources[i].f2type,
+                            'data': cli_resources[i].f2data,
+                            'region': cli_resources[i].f2region
+                        });
                     }
                 } else {
                     if (jsonres.includes(opts.searchFilter)) {
