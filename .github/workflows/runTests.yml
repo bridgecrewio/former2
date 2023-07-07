@@ -10,7 +10,7 @@ on:
 jobs:
   workspace-mocha:
     name: PR Tests
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     container:
       image: node:14
       options: --user root
